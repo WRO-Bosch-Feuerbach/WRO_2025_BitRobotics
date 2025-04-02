@@ -26,8 +26,8 @@ def ColorDetection():
 	#cx = int(width / 2)
 	#cy = int(height / 2)
 
-	AreaStartPixelX = int(width/2) -5
-	AreaStartPixelY = int(height/2) - 5
+	AreaStartPixelX = int(width/2) -10
+	AreaStartPixelY = int(height/2) - 20
 	AreaEndPixelX = int(width/2) +5
 	AreaEndPixelY = int(height/2) +5
 
