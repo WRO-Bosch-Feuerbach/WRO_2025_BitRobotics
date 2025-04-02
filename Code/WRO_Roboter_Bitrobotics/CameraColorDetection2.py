@@ -8,8 +8,8 @@ cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 144)
 
 def ColorDetection():
 
-	HueValueIsOrange = 0
-	HueValueIsBlue = 0
+	IsOrange = 0
+	IsBlue = 0
 
 	#while True:
 	_, frame = cap.read()
@@ -42,20 +42,20 @@ def ColorDetection():
 	for hue_value in picked_hue_value.flatten():
 #		print(hue_value)
 		if 9 < hue_value < 13:
-			HueValueIsOrange = HueValueIsOrange + 1
+			IsOrange = IsOrange + 1
 #			print(HueValueIsOrange)
 		elif 105 < hue_value < 115:
-			HueValueIsBlue = HueValueIsBlue + 1
+			IsBlue = IsBlue + 1
 #			print(HueValueIsBlue)
 
-	if HueValueIsOrange >= 10:
+	if IsOrange >= 10:
 		color = "ORANGE"
-		HueValueIsOrange = 0
+		IsOrange = 0
 		print(color)
 		return color
-	elif HueValueIsBlue >= 10:
+	elif IsBlue >= 10:
 		color = "BLUE"
-		HueValueIsBlue = 0
+		IsBlue = 0
 		print(color)
 		return color
 	else:
