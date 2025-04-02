@@ -3,24 +3,24 @@ from turtle import width
 import cv2
 
 cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 256)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 144)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 250)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 140)
 
 def ColorDetection():
 
-	HueValueIsOrange = 0
-	HueValueIsBlue = 0
+	OrangeBereich = 0
+	BlueBereich = 0
 
 	#while True:
 	_, frame = cap.read()
 
 	if frame is None:
-		print("Das Bild konnte nicht geladne werden")
+		print("Bild konnte nicht geladen werden")
 		exit()
 
 	hsv_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-	color = "Undefined"
+	color = "nicht definiert"
 	height, width, _ = frame.shape
 
 	#cx = int(width / 2)
@@ -62,6 +62,19 @@ def ColorDetection():
 		color = "WHITE"
 		print(color)
 		return color
+
+while True:
+    color = ColorDetection()
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+cap.release()
+cv2.destroyAllWindows()
+
+
+
+
+
 
 
 	
