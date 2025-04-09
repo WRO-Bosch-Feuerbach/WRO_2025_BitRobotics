@@ -3,12 +3,12 @@ import cv2
 import time
 from picamera import PiCamera
 from picamera.array import PiRGBArray
-import RPi.GPIO as GPIO  # GPIO-Steuerung für den Roboter
+import RPi.GPIO as GPIO  # GPIO-Steuerung fÃ¼r den Roboter
 from time import sleep
 
 # Kamera initialisieren
 camera = PiCamera()
-camera.resolution = (250, 140)  # Auflösung setzen
+camera.resolution = (250, 140)  # AuflÃ¶sung setzen
 camera.framerate = 32           # Framerate setzen
 rawCapture = PiRGBArray(camera, size=(250, 140))  # Bildpuffer
 
@@ -18,11 +18,11 @@ time.sleep(2)
 # GPIO initialisieren
 GPIO.setmode(GPIO.BOARD)
 
-# Definiere Motoren/Pins (dies ist ein Beispiel, die Pins müssen je nach deinem Roboter angepasst werden)
-LEFT_MOTOR_FORWARD = 18
-LEFT_MOTOR_BACKWARD = 22
-RIGHT_MOTOR_FORWARD = 23
-RIGHT_MOTOR_BACKWARD = 24
+# Definiere Motoren/Pins 
+LEFT_MOTOR_FORWARD = ?
+LEFT_MOTOR_BACKWARD = ?
+RIGHT_MOTOR_FORWARD = ?
+RIGHT_MOTOR_BACKWARD = ?
 
 # Motoren als Ausgang festlegen
 GPIO.setup(LEFT_MOTOR_FORWARD, GPIO.OUT)
@@ -69,24 +69,24 @@ def line_detection(frame):
     # Bild schwellenwerten, um Linien zu erkennen
     _, threshold = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY_INV)
 
-    # Finde die Kanten im Bild (optional: Kanten können auch helfen, Linien zu erkennen)
+    # Finde die Kanten im Bild 
     edges = cv2.Canny(threshold, 50, 150)
 
-    # Zähle die Anzahl der "weißen" Pixel, die Linien darstellen
+    # ZÃ¤hle die Anzahl der "weiÃŸen" Pixel, die Linien darstellen
     line_pixels = cv2.countNonZero(edges)
 
     return line_pixels
 
-# Hauptlogik für die Steuerung
-line_counter = 0  # Zähler für erkannte Linien
+# Hauptlogik fÃ¼r Steuerung
+line_counter = 0  # ZÃ¤hler fÃ¼r erkannte Linien
 
 for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
     image = frame.array  # Das aktuelle Bild aus dem Buffer holen
 
-    # Linienerkennung durchführen
+    # Linienerkennung durchfÃ¼hren
     line_pixels = line_detection(image)
 
-    # Wenn genügend Linienpixel erkannt werden, erhöhen wir den Zähler
+    # Wenn genÃ¼gend Linienpixel erkannt werden, erhÃ¶he den ZÃ¤hler
     if line_pixels > 500:  # Schwellenwert, um eine Linie zu erkennen
         line_counter += 1
         print(f"Linie erkannt! Gesamtzahl: {line_counter}")
@@ -94,16 +94,16 @@ for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=
     # Wenn der Roboter 24 Linien erkannt hat, stoppe ihn
     if line_counter >= 24:
         print("24 Linien erkannt. Roboter stoppt.")
-        stop()  # Roboter anhalten
+        stop()  
         break  
 
-    # Wenn weniger als 8 Linien erkannt werden, fährt der Roboter weiter
+    # Wenn weniger als 24 Linien erkannt werden, fÃ¤hrt der Roboter weiter
     move_forward()
 
-    # Buffer löschen
+    # Buffer lÃ¶schen
     rawCapture.truncate(0)
 
-    # Wenn die Taste 'q' gedrückt wird, das Programm beenden
+    # Wenn die Taste 'q' gedrÃ¼ckt wird, das Programm beenden
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
