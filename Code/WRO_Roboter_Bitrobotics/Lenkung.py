@@ -8,10 +8,10 @@ from gpiozero import DistanceSensor
 from time import sleep
 
 
-Rx = 15
-Tx = 14
-Tr = 23
-Ec = 24
+Rx = 15 # Echo hinten
+Tx = 14 # Trigger Hinten
+Tr = 23 # Trigger vorne
+Ec = 24 # Echo vorne
 Rücksensor = DistanceSensor(echo=Tx, trigger=Rx, max_distance = 2)
 sensor = DistanceSensor(echo=Ec, trigger=Tr, max_distance = 2)
 
@@ -27,6 +27,13 @@ def winkel(ID, winkel):
     servo_angle = servo.Servo(pca.channels[ID], min_pulse = 500, max_pulse = 2400, actuation_range = 180)
     servo_angle.angle = winkel
     print(servo_angle.angle)
+    return(servo_angle.angle)
+
+def Kopfwinkel(ID, winkel):
+    servo_angle = servo.Servo(pca.channels[ID], min_pulse = 500, max_pulse = 2400, actuation_range = 180)
+    servo_angle.angle = winkel
+    print(servo_angle.angle)
+    return(servo_angle.angle)
     
 
 def LenkungLinks():
@@ -49,15 +56,15 @@ def LenkungGerade():
 
 def KopfdrehungLinks():
     #print("Ich schaue Links")
-    winkel(1, 140)
+    Kopfwinkel(1, 140)
 
 def KopfdrehungRechts():
     #print("Ich schaue Rechts")
-    winkel(1, 40)
+    Kopfwinkel(1, 40)
 
 def KopfdrehungVoraus():
     #print("Ich schaue Voraus")
-    winkel(1, 90)
+    Kopfwinkel(1, 90)
 
 def KopfneigungMitte():
     #print("Ich schaue geradeaus")
@@ -76,7 +83,29 @@ if __name__ == '__main__':
     while distance >= 6:
         try:
             
-            while True:
+            while True: #Funktioniert, wechselt aber noch zwischen Links/rechts schauen
+
+                KopfdrehungLinks()
+                distance = checkDist()
+
+                while distance <= 50 and 85 < Kopfwinkel(1, 140) > 140:
+                    KopfdrehungLinks()
+                    LenkungRechts()
+                    distance = checkDist()
+
+                KopfdrehungRechts()
+                while distance <= 50 and 40 < Kopfwinkel(1, 40) > 85:
+                    KopfdrehungRechts()
+                    LenkungLinks()
+                    distance = checkDist()
+
+
+
+
+
+
+
+
                 distance = checkDist()
                 KopfdrehungLinks()
                 time.sleep(0.5)
