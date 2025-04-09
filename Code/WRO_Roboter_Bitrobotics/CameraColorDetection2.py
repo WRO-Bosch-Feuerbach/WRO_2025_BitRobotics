@@ -2,23 +2,23 @@ import time
 from turtle import width
 import cv2
 
-cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 250)
+cap = cv2.VideoCapture(0) #öffnet Kamera 0 oder 1
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 250)  #Auflösung in Pixel
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 140)
 
 def ColorDetection():
 
-	OrangeBereich = 0
-	BlueBereich = 0
+	OrangeSection = 0
+	BlueSection = 0
 
 	#while True:
-	_, frame = cap.read()
+	_, frame = cap.read()  #liest aktuelle Bild aus dem Kamerafeed
 
 	if frame is None:
-		print("Bild konnte nicht geladen werden")
+		print("Bild konnte nicht geladen werden")  #Bild nicht geladen
 		exit()
 
-	hsv_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+	hsv_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)  #BGR zu HSV(Farbton, Sättigung, Helligkeit)
 
 	color = "nicht definiert"
 	height, width, _ = frame.shape
@@ -26,36 +26,36 @@ def ColorDetection():
 	#cx = int(width / 2)
 	#cy = int(height / 2)
 
-	AreaStartPixelX = int(width/2) -10
+	AreaStartPixelX = int(width/2) -10  #definiert den Bereich wo beachtet wird, also Rechteck
 	AreaStartPixelY = int(height/2) - 20
 	AreaEndPixelX = int(width/2) +5
 	AreaEndPixelY = int(height/2) +5
 
-	roi = hsv_frame[AreaStartPixelY:AreaEndPixelY, AreaStartPixelX:AreaEndPixelX]
+	roi = hsv_frame[AreaStartPixelY:AreaEndPixelY, AreaStartPixelX:AreaEndPixelX]  #roi (Region of Interest) 
 
 	#pixel_Area = hsv_frame[roi]
 	
-	picked_hue_value = roi[:, :, 0]
+	pick_Farbton_Helligkeit = roi[:, :, 0]  #Farbton (Hue) des ausgewählten Bereichs wird extrahiert
 
 #	print(picked_hue_value)
 	
-	for hue_value in picked_hue_value.flatten():
+	for Farbton_Helligkeit in pick_Farbton_Helligkeit.flatten():  #jeder Farbton wird einzeln durchgegangen
 #		print(hue_value)
-		if 9 < hue_value < 13:
-			HueValueIsOrange = HueValueIsOrange + 1
+		if 9 < Farbton_Helligkeit < 13:
+			OrangeSection = OrangeSection + 1
 #			print(HueValueIsOrange)
-		elif 105 < hue_value < 115:
-			HueValueIsBlue = HueValueIsBlue + 1
+		elif 105 < Farbton_Helligkeit < 115:  #wie viele Pixel in den Bereichen ist
+			BlueSection = BlueSection + 1
 #			print(HueValueIsBlue)
 
-	if HueValueIsOrange >= 10:
+	if OrangeSection >= 10:  #wenn 10 oder mehr pixel erkannt, dann dieser farbton
 		color = "ORANGE"
-		HueValueIsOrange = 0
+		OrangeSection = 0
 		print(color)
 		return color
-	elif HueValueIsBlue >= 10:
+	elif BlueSection >= 10:
 		color = "BLUE"
-		HueValueIsBlue = 0
+		BlueSection = 0
 		print(color)
 		return color
 	else:
@@ -64,11 +64,11 @@ def ColorDetection():
 		return color
 
 while True:
-    color = ColorDetection()
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+    color = ColorDetection()     #läuft kontinuierlich,ruft ColorDetection()-Funktion auf. 
+    if cv2.waitKey(1) & 0xFF == ord('q'):  #wartet auf Tasteneingabe "q", dann Loop wird beendet.
         break
 
-cap.release()
+cap.release()   #beendet Kameraaufnahme und schließt alle OpenCV-Fenster
 cv2.destroyAllWindows()
 
 
