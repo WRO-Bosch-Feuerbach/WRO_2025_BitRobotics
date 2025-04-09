@@ -2,12 +2,12 @@ import cv2
 import time
 from picamera import PiCamera
 from picamera.array import PiRGBArray
-import RPi.GPIO as GPIO  # GPIO-Steuerung für den Roboter
+import RPi.GPIO as GPIO  # GPIO-Steuerung fÃ¼r den Roboter
 from time import sleep
 
 # Kamera initialisieren
 camera = PiCamera()
-camera.resolution = (250, 140)  # Auflösung setzen
+camera.resolution = (250, 140)  # AuflÃ¶sung setzen
 camera.framerate = 32           # Framerate setzen
 rawCapture = PiRGBArray(camera, size=(250, 140))  # Bildpuffer
 
@@ -17,11 +17,11 @@ time.sleep(2)
 # GPIO initialisieren
 GPIO.setmode(GPIO.BOARD)
 
-# Definiere Motoren/Pins (dies ist ein Beispiel, die Pins müssen je nach deinem Roboter angepasst werden)
-LEFT_MOTOR_FORWARD = 18
-LEFT_MOTOR_BACKWARD = 22
-RIGHT_MOTOR_FORWARD = 23
-RIGHT_MOTOR_BACKWARD = 24
+# Definiere Motoren/Pins 
+LEFT_MOTOR_FORWARD = ?
+LEFT_MOTOR_BACKWARD = ?
+RIGHT_MOTOR_FORWARD = ?
+RIGHT_MOTOR_BACKWARD = ?
 
 # Motoren als Ausgang festlegen
 GPIO.setup(LEFT_MOTOR_FORWARD, GPIO.OUT)
@@ -64,14 +64,14 @@ def stop():
 def ColorDetection(frame):
     hsv_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-    # Farben definieren (HSV-Bereich für Grün und Rot)
+    # Farben definieren (HSV-Bereich fÃ¼r GrÃ¼n und Rot)
     green_lower = (35, 40, 40)
     green_upper = (85, 255, 255)
 
     red_lower = (0, 100, 100)
     red_upper = (10, 255, 255)
 
-    # Erkenne grünes Hindernis
+    # Erkenne grÃ¼nes Hindernis
     green_mask = cv2.inRange(hsv_frame, green_lower, green_upper)
     red_mask = cv2.inRange(hsv_frame, red_lower, red_upper)
 
@@ -85,35 +85,35 @@ def ColorDetection(frame):
     else:
         return "NO_OBSTACLE"
 
-# Hauptlogik für die Steuerung
+# Hauptlogik fÃ¼r die Steuerung
 for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
     image = frame.array  # Das aktuelle Bild aus dem Buffer holen
-    detected_color = ColorDetection(image)  # Farberkennung durchführen
+    detected_color = ColorDetection(image)  # Farberkennung durchfÃ¼hren
 
     if detected_color == "GREEN":
-        print("Grünes Hindernis erkannt. Wende nach links!")
-        move_backward()  # Rückwärts fahren
-        sleep(1)  # Rückwärts fahren für 1 Sekunde
+        print("GrÃ¼nes Hindernis erkannt. Wende nach links!")
+        move_backward()  # RÃ¼ckwÃ¤rts fahren
+        sleep(1)  # RÃ¼ckwÃ¤rts fahren fÃ¼r 1 Sekunde
         turn_left()  # Nach links drehen
         sleep(1)  # 1 Sekunde lang nach links drehen
         move_forward()  # Weiterfahren
         print("Weiterfahren...")
     elif detected_color == "RED":
         print("Rotes Hindernis erkannt. Wende nach rechts!")
-        move_backward()  # Rückwärts fahren
-        sleep(1)  # Rückwärts fahren für 1 Sekunde
-        turn_right()  # Nach rechts drehen
-        sleep(1)  # 1 Sekunde lang nach rechts drehen
-        move_forward()  # Weiterfahren
+        move_backward()  
+        sleep(1)  
+        turn_right()  
+        sleep(1)  
+        move_forward()
         print("Weiterfahren...")
     else:
         print("Kein Hindernis erkannt. Weiterfahren...")
-        move_forward()  # Weiterfahren, wenn kein Hindernis erkannt wurde
+        move_forward()  
 
-    # Buffer löschen
+    # Buffer lÃ¶schen
     rawCapture.truncate(0)
 
-    # Wenn die Taste 'q' gedrückt wird, das Programm beenden
+    # Wenn die Taste 'q' gedrÃ¼ckt wird, das Programm beenden
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
