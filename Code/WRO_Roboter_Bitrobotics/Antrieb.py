@@ -7,22 +7,25 @@ from adafruit_motor import motor
 from gpiozero import DistanceSensor
 from time import sleep
 
-Rx = 15
-Tx = 14
-Tr = 23
-Ec = 24
-Rücksensor = DistanceSensor(echo=Tx, trigger=Rx, max_distance = 2)
-sensor = DistanceSensor(echo=Ec, trigger=Tr, max_distance = 2)
+ER = 15 # Echo R
+TR = 14 # Trigger R
+EL = 22 # Echo L
+TL = 27 # Trigger L
+TF = 23 # Echo Front
+EF = 24 # Echo Front
+Rechtssensor = DistanceSensor(echo = TR, trigger = ER, max_distance = 2)
+Linkssensor = DistanceSensor(echo=TL, trigger=EL, max_distance = 2)
+sensor = DistanceSensor(echo=EF, trigger=TF, max_distance = 2)
 
-MOTOR_M1_IN1 = 15
-MOTOR_M1_IN2 = 14
+#MOTOR_M1_IN1 = 15
+#MOTOR_M1_IN2 = 14
 MOTOR_M2_IN1 = 13
 MOTOR_M2_IN2 = 12
 MOTOR_M3_IN1 = 11
 MOTOR_M3_IN2 = 10
 MOTOR_M4_IN1 = 8
 MOTOR_M4_IN2 = 9
-
+# Kommentar
 Dir_forward = 0
 Dir_backward = 1
 
@@ -45,8 +48,8 @@ pwm_motor.frequency = 1000
 pca = PCA9685(i2c, address = 0x5f) # PCA = Servo
 pca.frequency = 50
 
-motor1 = motor.DCMotor(pwm_motor.channels[MOTOR_M1_IN1], pwm_motor.channels[MOTOR_M1_IN2])
-motor1.decay_mode = (motor.SLOW_DECAY)
+#motor1 = motor.DCMotor(pwm_motor.channels[MOTOR_M1_IN1], pwm_motor.channels[MOTOR_M1_IN2])
+#motor1.decay_mode = (motor.SLOW_DECAY)
 motor2 = motor.DCMotor(pwm_motor.channels[MOTOR_M2_IN1], pwm_motor.channels[MOTOR_M2_IN2])
 motor2.decay_mode = (motor.SLOW_DECAY)
 motor3 = motor.DCMotor(pwm_motor.channels[MOTOR_M3_IN1], pwm_motor.channels[MOTOR_M3_IN2])
@@ -75,12 +78,15 @@ def Motor(channel, direction, motor_speed):
 
 def checkDist():
     return(sensor.distance) * 100 #unit in cm
-    
-def rückDist():
-    return(Rücksensor.distance) * 100
+
+def LinksDist():
+    return(Linkssensor.distance) * 100
+
+def RechtsDist():
+    return(Rechtssensor.distance) * 100
 
 def motorStop():
-    motor1.throttle = 0
+#    motor1.throttle = 0
     motor2.throttle = 0
     motor3.throttle = 0
     motor4.throttle = 0
@@ -89,7 +95,8 @@ def destroy():
     motorStop()
     pwm_motor.deinit()
     pca.deinit()
-rückdistance = rückDist()
+distanceL = LinksDist()
+distanceR = RechtsDist()
 distance = checkDist()
 
 if __name__ == '__main__':
@@ -99,24 +106,26 @@ if __name__ == '__main__':
             while distance >= 1:
                 if distance > 90   :
                     speed_set = 70
-                    Motor(1, 1, speed_set)
+ #                   Motor(1, 1, speed_set)
                     Motor(2, 1, speed_set)
                     Motor(3, 1, speed_set)
                     Motor(4, 1, speed_set)
                     distance = checkDist()
-                    rückdistance = rückDist()
+                    Linksdistance = LinksDist()
+                    Rechtsdistance = RechtsDist()
                     print("%2.f cm" %distance)
 
 
                 elif distance < 90 and distance > 6:  
                     #print("Obstacle detected")
-                    rückdistance = rückDist()
-                    if rückdistance < 15:
+                    Linksdistance = LinksDist()
+                    Rechtsdistance = RechtsDist()
+                    if Linksdistance < 15 or Rechtsdistance < 15:
                         speed_set = 0
                     else:
-                        speed_set = 50
+                        speed_set = 30
                     
-                    Motor(1, 1, speed_set)
+#                    Motor(1, 1, speed_set)
                     Motor(2, 1, speed_set)
                     Motor(3, 1, speed_set)
                     Motor(4, 1, speed_set)
