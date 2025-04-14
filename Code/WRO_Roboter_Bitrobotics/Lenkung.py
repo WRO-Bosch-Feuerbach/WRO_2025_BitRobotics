@@ -12,11 +12,11 @@ from time import sleep
 
 ER = 15 # Echo R
 TR = 14 # Trigger R
-EL = 22 # Echo L
-TL = 27 # Trigger L
+TL = 22 # Echo L
+EL = 27 # Trigger L
 TF = 23 # Trigger vorne
 EF = 24 # Echo vorne
-Linkssensor = DistanceSensor(echo=TL, trigger=EL, max_distance = 2)
+Linkssensor = DistanceSensor(echo=EL, trigger=TL, max_distance = 2)
 Rechtssensor = DistanceSensor(echo = ER,trigger = TR, max_distance = 2 )
 sensor = DistanceSensor(echo=EF, trigger=TF, max_distance = 2)
 
@@ -102,10 +102,10 @@ if __name__ == '__main__':
 
                 if distanceL <= 20:
                     LenkungRechts()
-                elif distanceR <= 20:
+                if distanceR <= 20:
                     LenkungLinks()
-                else:
-                    LenkungGerade()
+                
+                LenkungGerade()
 
 #                distance = checkDist()
 #                KopfdrehungLinks()
