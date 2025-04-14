@@ -25,7 +25,7 @@ MOTOR_M3_IN1 = 11
 MOTOR_M3_IN2 = 10
 MOTOR_M4_IN1 = 8
 MOTOR_M4_IN2 = 9
-# Kommentar
+
 Dir_forward = 0
 Dir_backward = 1
 
