@@ -10,10 +10,10 @@ from time import sleep
 
 
 
-EL = 15 # Echo Links
-TL = 14 # Trigger Links
-ER = 22 # Echo Rechts
-TR = 27 # Trigger Rechts
+ER = 15 # Echo R
+TR = 14 # Trigger R
+EL = 22 # Echo L
+TL = 27 # Trigger L
 TF = 23 # Trigger vorne
 EF = 24 # Echo vorne
 Linkssensor = DistanceSensor(echo=TL, trigger=EL, max_distance = 2)
