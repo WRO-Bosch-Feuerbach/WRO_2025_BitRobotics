@@ -1,3 +1,4 @@
+from locale import ERA
 import time
 from turtle import speed
 from board import SCL, SDA
@@ -8,12 +9,16 @@ from gpiozero import DistanceSensor
 from time import sleep
 
 
-Rx = 15 # Echo hinten
-Tx = 14 # Trigger Hinten
-Tr = 23 # Trigger vorne
-Ec = 24 # Echo vorne
-Rücksensor = DistanceSensor(echo=Tx, trigger=Rx, max_distance = 2)
-sensor = DistanceSensor(echo=Ec, trigger=Tr, max_distance = 2)
+
+EL = 15 # Echo Links
+TL = 14 # Trigger Links
+ER = 22 # Echo Rechts
+TR = 27 # Trigger Rechts
+TF = 23 # Trigger vorne
+EF = 24 # Echo vorne
+Linkssensor = DistanceSensor(echo=TL, trigger=EL, max_distance = 2)
+Rechtssensor = DistanceSensor(echo = ER,trigger = TR, max_distance = 2 )
+sensor = DistanceSensor(echo=EF, trigger=TF, max_distance = 2)
 
 def map(x, in_min, in_max, out_min, out_max):
     return (x - in_min)/(in_max - in_min)*(out_max - out_min) + out_min
@@ -73,11 +78,15 @@ def KopfneigungMitte():
 def checkDist():
     return(sensor.distance) * 100 #unit in cm
     
-def rückDist():
-    return(Rücksensor.distance) * 100
+def LinksDist():
+    return(Linkssensor.distance) * 100
 
+def RechtsDist():
+    return(Rechtssensor.distance) * 100
 
+distanceR = RechtsDist()
 distance = checkDist()
+distanceL = LinksDist()
 
 if __name__ == '__main__':
     while distance >= 6:
@@ -85,65 +94,59 @@ if __name__ == '__main__':
             
             while True: #Funktioniert, wechselt aber noch zwischen Links/rechts schauen
 
-                KopfdrehungLinks()
+                KopfneigungMitte()
+                distanceR = RechtsDist()
                 distance = checkDist()
+                distanceL = LinksDist()
+                KopfdrehungVoraus()
 
-                while distance <= 50 and 85 < Kopfwinkel(1, 140) > 140:
-                    KopfdrehungLinks()
+                if distanceL <= 20:
                     LenkungRechts()
-                    distance = checkDist()
-
-                KopfdrehungRechts()
-                while distance <= 50 and 40 < Kopfwinkel(1, 40) > 85:
-                    KopfdrehungRechts()
+                elif distanceR <= 20:
                     LenkungLinks()
-                    distance = checkDist()
-
-
-
-
-
-
-
-
-                distance = checkDist()
-                KopfdrehungLinks()
-                time.sleep(0.5)
-                if distance <= 20:
-                    LenkungRechts()
-                    distance = checkDist()
-                    print("%2.f cm" %distance)
                 else:
                     LenkungGerade()
-                    print("%2.f cm" %distance)
-                time.sleep(1)
-                KopfdrehungRechts()
-                time.sleep(0.5)
-                if distance <= 20:
-                    LenkungLinks()
-                    distance = checkDist()
-                    print("%2.f cm" %distance)
-                else:
-                    LenkungGerade()
-                    print("%2.f cm" %distance)
-            
-            
-            KopfneigungMitte()
-            distance = checkDist()
-            while distance != 0:
-                if distance > 110:
-                    
-                    LenkungGerade()
-                    distance = checkDist()
-                    rückdistance = rückDist()
-                    print("%2.f cm" %distance)
-                    
-                elif distance < 110: 
-                    
-                    rückdistance = rückDist()
-                    distance = checkDist()
-                    print("%2.f cm" %distance)
-                    LenkungRechts()
+
+#                distance = checkDist()
+#                KopfdrehungLinks()
+#                time.sleep(0.5)
+#                if distance <= 20:
+#                    LenkungRechts()
+#                    distance = checkDist()
+#                    print("%2.f cm" %distance)
+#                else:
+#                    LenkungGerade()
+#                    print("%2.f cm" %distance)
+#                time.sleep(1)
+#                KopfdrehungRechts()
+#                time.sleep(0.5)
+#                if distance <= 20:
+#                    LenkungLinks()
+#                    distance = checkDist()
+#                    print("%2.f cm" %distance)
+#                else:
+#                    LenkungGerade()
+#                    print("%2.f cm" %distance)
+#            
+#            
+#            KopfneigungMitte()
+#            distance = checkDist()
+#            while distance != 0:
+#                if distance > 110:
+#                    
+#                    LenkungGerade()
+#                    distance = checkDist()
+#                    rückdistance = rückDist()
+#                    print("%2.f cm" %distance)
+#                    
+#                elif distance < 110: 
+#                    
+#                    rückdistance = rückDist()
+#                    distance = checkDist()
+#                    print("%2.f cm" %distance)
+#                    LenkungRechts()
+
+
         
         except KeyboardInterrupt:
             KopfdrehungVoraus()
