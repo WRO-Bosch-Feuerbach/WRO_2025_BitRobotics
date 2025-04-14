@@ -18,48 +18,6 @@ time.sleep(2)
 # GPIO initialisieren
 GPIO.setmode(GPIO.BOARD)
 
-# Definiere Motoren/Pins 
-LEFT_MOTOR_FORWARD = ?
-LEFT_MOTOR_BACKWARD = ?
-RIGHT_MOTOR_FORWARD = ?
-RIGHT_MOTOR_BACKWARD = ?
-
-# Motoren als Ausgang festlegen
-GPIO.setup(LEFT_MOTOR_FORWARD, GPIO.OUT)
-GPIO.setup(LEFT_MOTOR_BACKWARD, GPIO.OUT)
-GPIO.setup(RIGHT_MOTOR_FORWARD, GPIO.OUT)
-GPIO.setup(RIGHT_MOTOR_BACKWARD, GPIO.OUT)
-
-# Funktionen zur Steuerung des Roboters
-def move_forward():
-    GPIO.output(LEFT_MOTOR_FORWARD, GPIO.HIGH)
-    GPIO.output(RIGHT_MOTOR_FORWARD, GPIO.HIGH)
-    GPIO.output(LEFT_MOTOR_BACKWARD, GPIO.LOW)
-    GPIO.output(RIGHT_MOTOR_BACKWARD, GPIO.LOW)
-
-def move_backward():
-    GPIO.output(LEFT_MOTOR_BACKWARD, GPIO.HIGH)
-    GPIO.output(RIGHT_MOTOR_BACKWARD, GPIO.HIGH)
-    GPIO.output(LEFT_MOTOR_FORWARD, GPIO.LOW)
-    GPIO.output(RIGHT_MOTOR_FORWARD, GPIO.LOW)
-
-def turn_left():
-    GPIO.output(LEFT_MOTOR_BACKWARD, GPIO.HIGH)
-    GPIO.output(RIGHT_MOTOR_FORWARD, GPIO.HIGH)
-    GPIO.output(LEFT_MOTOR_FORWARD, GPIO.LOW)
-    GPIO.output(RIGHT_MOTOR_BACKWARD, GPIO.LOW)
-
-def turn_right():
-    GPIO.output(LEFT_MOTOR_FORWARD, GPIO.HIGH)
-    GPIO.output(RIGHT_MOTOR_BACKWARD, GPIO.HIGH)
-    GPIO.output(LEFT_MOTOR_BACKWARD, GPIO.LOW)
-    GPIO.output(RIGHT_MOTOR_FORWARD, GPIO.LOW)
-
-def stop():
-    GPIO.output(LEFT_MOTOR_FORWARD, GPIO.LOW)
-    GPIO.output(RIGHT_MOTOR_FORWARD, GPIO.LOW)
-    GPIO.output(LEFT_MOTOR_BACKWARD, GPIO.LOW)
-    GPIO.output(RIGHT_MOTOR_BACKWARD, GPIO.LOW)
 
 # Linienerkennung
 def line_detection(frame):
