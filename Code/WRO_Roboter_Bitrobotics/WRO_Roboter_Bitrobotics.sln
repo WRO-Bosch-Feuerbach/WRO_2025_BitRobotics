@@ -5,6 +5,10 @@ VisualStudioVersion = 17.11.35327.3
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "WRO_Roboter_Bitrobotics", "WRO_Roboter_Bitrobotics.pyproj", "{F5FFAFBE-45B3-4792-8190-9CD4B5F7127D}"
 EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "Stoppen.nach.3.runden", "..\Stoppen.nach.3.runden\Stoppen.nach.3.runden.pyproj", "{F6B01031-73DB-487B-97CD-2AB94A0D9A68}"
+EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "Starten", "..\Starten\Starten.pyproj", "{56B3FA1B-B29C-437E-9675-17077241C6DF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -13,6 +17,10 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{F5FFAFBE-45B3-4792-8190-9CD4B5F7127D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{F5FFAFBE-45B3-4792-8190-9CD4B5F7127D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F6B01031-73DB-487B-97CD-2AB94A0D9A68}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F6B01031-73DB-487B-97CD-2AB94A0D9A68}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{56B3FA1B-B29C-437E-9675-17077241C6DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{56B3FA1B-B29C-437E-9675-17077241C6DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
