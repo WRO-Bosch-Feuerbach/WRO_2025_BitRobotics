@@ -15,7 +15,7 @@ def ColorDetection():
 	_, frame = cap.read()
 
 	if frame is None:
-		print("Das Bild konnte nicht geladne werden")
+		print("Das Bild konnte nicht geladen werden")
 		exit()
 
 	hsv_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
