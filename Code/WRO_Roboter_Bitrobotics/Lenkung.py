@@ -45,14 +45,14 @@ def Kopfwinkel(ID, winkel):
 
 def LenkungLinks():
     #print("Ich Lenke Links")
-    if distance < 110:
+    if distanceR < 15 or distance < 15:
         winkel(0, 120)
     else:
         winkel(0, max(0, min(180, map(distance, 75, 110, 120, 90))))
 
 def LenkungRechts():
     #print("Ich Lenke Rechts")
-    if distance < 110:
+    if distanceL < 15 or distance < 15:
         winkel(0, 60)
     else:
         winkel(0, max(0, min(180, map(distance, 75, 110, 60, 90))))
@@ -61,21 +61,13 @@ def LenkungGerade():
     #print("Ich Lenke Gerade")
     winkel(0, 90)
 
-def KopfdrehungLinks():
-    #print("Ich schaue Links")
-    Kopfwinkel(1, 140)
-
-def KopfdrehungRechts():
-    #print("Ich schaue Rechts")
-    Kopfwinkel(1, 40)
-
 def KopfdrehungVoraus():
     #print("Ich schaue Voraus")
     Kopfwinkel(1, 90)
 
 def KopfneigungMitte():
     #print("Ich schaue geradeaus")
-    winkel(2, 65)
+    winkel(2, 60)
     
 def checkDist():
     return(sensor.distance) * 100 #unit in cm
@@ -103,21 +95,25 @@ if __name__ == '__main__':
                 distanceL = LinksDist()
                 KopfdrehungVoraus()
 
-                if distance <= 40:
-                    speed_set = 40
+                if distance <= 50:
+                    speed_set = 25
                 else:
-                    speed_set = 50
+                    speed_set = 30
+                
+
+                if distance <= 40 or distanceL < 30 or distanceR < 30:
+                    distanceL = LinksDist()
+                    distanceR = RechtsDist()
+                    if distanceL < distanceR:
+                        LenkungRechts()
+                        time.sleep(1)
+                    elif distanceR < distanceL:
+                        LenkungLinks()
+                        time.sleep(1)
+                    else:
+                        LenkungGerade()
 
                 Antrieb.Motor(2, 1, speed_set)
-                if distanceL < distanceR:
-                    LenkungLinks()
-
-                elif distanceR < distanceL:
-                    LenkungRechts()
-                else:
-                    LenkungGerade()
-
-
         
         except KeyboardInterrupt:
             Antrieb.motorStop()
