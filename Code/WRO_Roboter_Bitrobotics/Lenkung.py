@@ -6,14 +6,16 @@ import busio
 from adafruit_pca9685 import PCA9685
 from adafruit_motor import motor, servo
 from gpiozero import DistanceSensor
+import CameraColorDetection2 as Camera
+import Antrieb
 from time import sleep
 
 
 
 ER = 15 # Echo R
 TR = 14 # Trigger R
-TL = 22 # Echo L
-EL = 27 # Trigger L
+TL = 22 # Trigger L
+EL = 27 # Echo L
 TF = 23 # Trigger vorne
 EF = 24 # Echo vorne
 Linkssensor = DistanceSensor(echo=EL, trigger=TL, max_distance = 2)
@@ -89,6 +91,7 @@ distance = checkDist()
 distanceL = LinksDist()
 
 if __name__ == '__main__':
+
     while distance >= 6:
         try:
             
@@ -100,55 +103,24 @@ if __name__ == '__main__':
                 distanceL = LinksDist()
                 KopfdrehungVoraus()
 
-                if distanceL <= 20:
-                    LenkungRechts()
-                if distanceR <= 20:
-                    LenkungLinks()
-                
-                LenkungGerade()
+                if distance <= 40:
+                    speed_set = 40
+                else:
+                    speed_set = 50
 
-#                distance = checkDist()
-#                KopfdrehungLinks()
-#                time.sleep(0.5)
-#                if distance <= 20:
-#                    LenkungRechts()
-#                    distance = checkDist()
-#                    print("%2.f cm" %distance)
-#                else:
-#                    LenkungGerade()
-#                    print("%2.f cm" %distance)
-#                time.sleep(1)
-#                KopfdrehungRechts()
-#                time.sleep(0.5)
-#                if distance <= 20:
-#                    LenkungLinks()
-#                    distance = checkDist()
-#                    print("%2.f cm" %distance)
-#                else:
-#                    LenkungGerade()
-#                    print("%2.f cm" %distance)
-#            
-#            
-#            KopfneigungMitte()
-#            distance = checkDist()
-#            while distance != 0:
-#                if distance > 110:
-#                    
-#                    LenkungGerade()
-#                    distance = checkDist()
-#                    rückdistance = rückDist()
-#                    print("%2.f cm" %distance)
-#                    
-#                elif distance < 110: 
-#                    
-#                    rückdistance = rückDist()
-#                    distance = checkDist()
-#                    print("%2.f cm" %distance)
-#                    LenkungRechts()
+                Antrieb.Motor(2, 1, speed_set)
+                if distanceL < distanceR:
+                    LenkungLinks()
+
+                elif distanceR < distanceL:
+                    LenkungRechts()
+                else:
+                    LenkungGerade()
 
 
         
         except KeyboardInterrupt:
+            Antrieb.motorStop()
             KopfdrehungVoraus()
             KopfneigungMitte()
             LenkungGerade()
