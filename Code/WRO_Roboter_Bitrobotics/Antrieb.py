@@ -9,9 +9,9 @@ from time import sleep
 
 ER = 15 # Echo R
 TR = 14 # Trigger R
-TL = 22 # Echo L
-EL = 27 # Trigger L
-TF = 23 # Echo Front
+TL = 22 # Trigger L
+EL = 27 # Echo L
+TF = 23 # Trigger Front
 EF = 24 # Echo Front
 Rechtssensor = DistanceSensor(echo = ER, trigger = TR, max_distance = 2)
 Linkssensor = DistanceSensor(echo=EL, trigger=TL, max_distance = 2)
@@ -77,13 +77,16 @@ def Motor(channel, direction, motor_speed):
         motor4.throttle = speed
 
 def checkDist():
-    return(sensor.distance) * 100 #unit in cm
+    entfernung = sensor.distance * 100
+    return(entfernung) #unit in cm
 
 def LinksDist():
-    return(Linkssensor.distance) * 100
+    entfernungL = Linkssensor.distance * 100
+    return(entfernungL)
 
 def RechtsDist():
-    return(Rechtssensor.distance) * 100
+    entfernungR = Rechtssensor.distance * 100
+    return(entfernungR)
 
 def motorStop():
 #    motor1.throttle = 0
@@ -106,7 +109,7 @@ if __name__ == '__main__':
             while distance >= 1:
                 if distance > 90   :
                     speed_set = 70
- #                   Motor(1, 1, speed_set)
+                    #Motor(1, 1, speed_set)
                     Motor(2, 1, speed_set)
                     Motor(3, 1, speed_set)
                     Motor(4, 1, speed_set)
@@ -125,7 +128,7 @@ if __name__ == '__main__':
                     else:
                         speed_set = 30
                     
-#                    Motor(1, 1, speed_set)
+                    #Motor(1, 1, speed_set)
                     Motor(2, 1, speed_set)
                     Motor(3, 1, speed_set)
                     Motor(4, 1, speed_set)
