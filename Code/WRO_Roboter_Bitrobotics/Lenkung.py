@@ -1,4 +1,5 @@
 from locale import ERA
+from re import L
 import time
 from turtle import speed
 from board import SCL, SDA
@@ -9,26 +10,15 @@ from gpiozero import DistanceSensor
 import CameraColorDetection2 as Camera
 import Antrieb
 from time import sleep
+import math
 
 
-
-ER = 15 # Echo R
-TR = 14 # Trigger R
-TL = 22 # Trigger L
-EL = 27 # Echo L
-TF = 23 # Trigger vorne
-EF = 24 # Echo vorne
-Linkssensor = DistanceSensor(echo=EL, trigger=TL, max_distance = 2)
-Rechtssensor = DistanceSensor(echo = ER,trigger = TR, max_distance = 2 )
-sensor = DistanceSensor(echo=EF, trigger=TF, max_distance = 2)
-
-def map(x, in_min, in_max, out_min, out_max):
-    return (x - in_min)/(in_max - in_min)*(out_max - out_min) + out_min
     
 i2c = busio.I2C(SCL, SDA)
 
 pca = PCA9685(i2c, address = 0x5f) # PCA = Servo
 pca.frequency = 50
+
 
 def winkel(ID, winkel):
     servo_angle = servo.Servo(pca.channels[ID], min_pulse = 500, max_pulse = 2400, actuation_range = 180)
@@ -41,21 +31,41 @@ def Kopfwinkel(ID, winkel):
     servo_angle.angle = winkel
     print(servo_angle.angle)
     return(servo_angle.angle)
-    
+   
+def distance_to_angle_left(distance):
+    distance = max(0, min(200, distance))
+    winkel = 90 + ((200 - distance) / 200) * 90
+    return winkel
+
+def distance_to_angle_right(distance):
+    distance = max(0, min(200, distance))
+    winkel = 90 - ((200 - distance) / 200) * 90
+    return winkel
 
 def LenkungLinks():
     #print("Ich Lenke Links")
-    if distanceR < 15 or distance < 15:
-        winkel(0, 120)
+    if distanceR <= 20:
+        winkel(0, 140)
     else:
-        winkel(0, max(0, min(180, map(distance, 75, 110, 120, 90))))
+        if distance <= 60:
+            winkel(0, 120)
+        elif distance <= 20:
+            winkel(0, 140)
+        else: 
+            winkel(0, 90)
 
 def LenkungRechts():
     #print("Ich Lenke Rechts")
-    if distanceL < 15 or distance < 15:
-        winkel(0, 60)
+    if distanceL <= 20:
+        winkel(0, 40)
     else:
-        winkel(0, max(0, min(180, map(distance, 75, 110, 60, 90))))
+        if distance <= 60:
+            winkel(0, 60)
+        elif distance <= 20:
+            winkel(0, 40)
+        else:
+            winkel(0, 90)
+
 
 def LenkungGerade():
     #print("Ich Lenke Gerade")
@@ -69,49 +79,89 @@ def KopfneigungMitte():
     #print("Ich schaue geradeaus")
     winkel(2, 60)
     
-def checkDist():
-    return(sensor.distance) * 100 #unit in cm
-    
-def LinksDist():
-    return(Linkssensor.distance) * 100
 
-def RechtsDist():
-    return(Rechtssensor.distance) * 100
-
-distanceR = RechtsDist()
-distance = checkDist()
-distanceL = LinksDist()
+distanceR = Antrieb.RechtsDist()
+distance = Antrieb.checkDist()
+distanceL = Antrieb.LinksDist()
 
 if __name__ == '__main__':
-
+    count = 0
+    Richtung = "Null"
+    speed_set = 40
     while distance >= 6:
         try:
-            
+
             while True: #Funktioniert, wechselt aber noch zwischen Links/rechts schauen
 
-                KopfneigungMitte()
-                distanceR = RechtsDist()
-                distance = checkDist()
-                distanceL = LinksDist()
-                KopfdrehungVoraus()
+                Antrieb.Motor(2, 1, speed_set)
+                if count == 0:
+                    if distance <= 90:
+                        Antrieb.motorStop()
+                        time.sleep(2)
+                        if distanceL < distanceR:
+                            Richtung = "Rechts"
+                            print(f"Rechts ist mehr Platz, Fahre {Richtung} Herum")
+                            count = 1
+                            time.sleep(2)
+                        elif distanceR < distanceL:
+                            Richtung = "Links"
+                            print(f"Links ist mehr Platz, Fahre {Richtung} Herum")
+                            count = 1
+                            time.sleep(2)
+                        else:
+                            print("Keine Richtung erfasst.")
+                            #time.sleep(5)
 
-                if distance <= 50:
-                    speed_set = 25
+                distanceL = Antrieb.Linkssensor.distance * 100
+                distanceR = Antrieb.Rechtssensor.distance * 100
+                distance = Antrieb.sensor.distance * 100
+                print(f"Links: {distanceL:.1f} cm | Rechts: {distanceR:.1f} cm | Vorne: {distance:.1f} cm")
+  
+                if distanceL <= 10:
+                    LenkungRechts()
+                elif distanceR <= 10:
+                    LenkungLinks()
+                else:
+                    if distance <= 90 and Richtung == "Links":
+                        LenkungLinks()
+                    elif distance <= 90 and Richtung == "Rechts":
+                        LenkungRechts()
+                    else:
+                        print("Keine Richtung")
+                        LenkungGerade()
+ 
+                # Geschwindigkeit basierend auf dem Frontabstand
+                if distance <= 90:
+                    speed_set = 30
+                elif distance > 90:
+                    speed_set = 40
                 else:
                     speed_set = 30
-                
+ 
+                # Motoren steuern
+                Antrieb.Motor(2, 1, speed_set)  # Vorwärts
+                Antrieb.Motor(3, 1, speed_set)  # Vorwärts
+                Antrieb.Motor(4, 1, speed_set)  # Vorwärts
+ 
+                #time.sleep(0.1)
 
-                if distance <= 40 or distanceL < 30 or distanceR < 30:
-                    distanceL = LinksDist()
-                    distanceR = RechtsDist()
-                    if distanceL < distanceR:
-                        LenkungRechts()
-                        time.sleep(1)
-                    elif distanceR < distanceL:
-                        LenkungLinks()
-                        time.sleep(1)
-                    else:
-                        LenkungGerade()
+                KopfneigungMitte()
+                distanceR = Antrieb.RechtsDist()
+                distance = Antrieb.checkDist()
+                distanceL = Antrieb.LinksDist()
+                KopfdrehungVoraus()                
+
+#                if distance <= 40 or distanceL < 30 or distanceR < 30:
+#                    distanceL = Antrieb.LinksDist()
+#                    distanceR = Antrieb.RechtsDist()
+#                    if distanceL < distanceR:
+#                        LenkungRechts()
+#                        time.sleep(1)
+#                    elif distanceR < distanceL:
+#                        LenkungLinks()
+#                        time.sleep(1)
+#                    else:
+#                        LenkungGerade()
 
                 Antrieb.Motor(2, 1, speed_set)
         
