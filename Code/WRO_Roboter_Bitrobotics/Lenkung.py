@@ -91,18 +91,20 @@ if __name__ == '__main__':
 
                 Antrieb.Motor(2, 1, speed_set)
                 if count == 0:
-                    if distance <= 85:
+                    if distance <= 30:
                         Antrieb.motorStop()
                         time.sleep(2)
                         if distanceL < distanceR:
                             Richtung = "Rechts"
                             print(f"Rechts ist mehr Platz, Fahre {Richtung} Herum")
                             count = 1
+                            Antrieb.Motor(2, -1, 30)
                             time.sleep(2)
                         elif distanceR < distanceL:
                             Richtung = "Links"
                             print(f"Links ist mehr Platz, Fahre {Richtung} Herum")
                             count = 1
+                            Antrieb.Motor(2, -1, 30)
                             time.sleep(2)
                         else:
                             print("Keine Richtung erfasst.")
