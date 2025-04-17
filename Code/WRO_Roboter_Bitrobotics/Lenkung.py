@@ -34,37 +34,36 @@ def Kopfwinkel(ID, winkel):
    
 def distance_to_angle_left(distance):
     distance = max(0, min(200, distance))
-    winkel = 90 + ((200 - distance) / 200) * 90
+    winkel = 90 + ((200 - distance) / 200) * 60  # Hier anstelle 90° nur 60° maximal
     return winkel
 
 def distance_to_angle_right(distance):
     distance = max(0, min(200, distance))
-    winkel = 90 - ((200 - distance) / 200) * 90
+    winkel = 90 - ((200 - distance) / 200) * 60  # Hier anstelle 90° nur 60° maximal
     return winkel
 
 def LenkungLinks():
-    #print("Ich Lenke Links")
-    if distanceR <= 20:
-        winkel(0, 140)
+    global current_angle_left  # Der aktuelle Winkel für Linkslenkung
+    if distanceR <= 15:
+        target_angle = 140  # Maximale Lenkung nach links
     else:
-        if distance <= 80:
-            winkel(0, 120)
-        elif distance <= 20:
-            winkel(0, 140)
-        else: 
-            winkel(0, 90)
+        target_angle = distance_to_angle_left(distance)  # Berechneter Winkel basierend auf der Distanz
+    
+    # Sanfte Anpassung des Winkels
+    current_angle_left = adjust_angle_smoothly(current_angle_left, target_angle)
+    winkel(0, current_angle_left)
+
 
 def LenkungRechts():
-    #print("Ich Lenke Rechts")
-    if distanceL <= 20:
-        winkel(0, 40)
+    global current_angle_right  # Der aktuelle Winkel für Rechtslenkung
+    if distanceL <= 15:
+        target_angle = 40  # Maximale Lenkung nach rechts
     else:
-        if distance <= 80:
-            winkel(0, 60)
-        elif distance <= 20:
-            winkel(0, 40)
-        else:
-            winkel(0, 90)
+        target_angle = distance_to_angle_right(distance)  # Berechneter Winkel basierend auf der Distanz
+    
+    # Sanfte Anpassung des Winkels
+    current_angle_right = adjust_angle_smoothly(current_angle_right, target_angle)
+    winkel(0, current_angle_right)
 
 
 def LenkungGerade():
