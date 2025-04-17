@@ -88,6 +88,7 @@ if __name__ == '__main__':
         try:
             while True: #Funktioniert, wechselt aber noch zwischen Links/rechts schauen
 
+
                 Antrieb.Motor(2, 1, speed_set)
                 if count == 0:
                     if distance <= 30:
