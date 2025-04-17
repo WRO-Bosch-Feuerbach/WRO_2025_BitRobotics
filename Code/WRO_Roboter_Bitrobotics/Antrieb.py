@@ -89,7 +89,7 @@ def RechtsDist():
     return(entfernungR)
 
 def motorStop():
-#    motor1.throttle = 0
+    #motor1.throttle = 0
     motor2.throttle = 0
     motor3.throttle = 0
     motor4.throttle = 0
