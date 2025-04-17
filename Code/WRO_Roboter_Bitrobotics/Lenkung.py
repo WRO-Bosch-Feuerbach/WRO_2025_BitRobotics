@@ -44,8 +44,9 @@ def distance_to_angle_right(distance):
 
 def LenkungLinks():
     # Berechnung des Lenkwinkels basierend auf der Entfernung
-    if distanceR <= 20:
-        winkel(0, 140)  # Maximale Lenkung nach links
+    if distanceR <= 35:
+        winkel_value = distance_to_angle_left(distanceR)
+        winkel(0, winkel_value)  # Maximale Lenkung nach links
     else:
         winkel_value = distance_to_angle_left(distance)  # Dynamischer Winkel basierend auf der Distanz
         winkel(0, winkel_value)
@@ -53,8 +54,9 @@ def LenkungLinks():
 
 def LenkungRechts():
     # Berechnung des Lenkwinkels basierend auf der Entfernung
-    if distanceL <= 20:
-        winkel(0, 40)  # Maximale Lenkung nach rechts
+    if distanceL <= 35:
+        winkel_value = distance_to_angle_right(distanceL)
+        winkel(0, winkel_value)  # Maximale Lenkung nach rechts
     else:
         winkel_value = distance_to_angle_right(distance)  # Dynamischer Winkel basierend auf der Distanz
         winkel(0, winkel_value)
@@ -111,9 +113,9 @@ if __name__ == '__main__':
                 distance = Antrieb.sensor.distance * 100
                 print(f"Links: {distanceL:.1f} cm | Rechts: {distanceR:.1f} cm | Vorne: {distance:.1f} cm")
   
-                if distanceL <= 10:
+                if distanceL <= 40:
                     LenkungRechts()
-                elif distanceR <= 10:
+                elif distanceR <= 40:
                     LenkungLinks()
                 else:
                     if distance <= 90 and Richtung == "Links":
