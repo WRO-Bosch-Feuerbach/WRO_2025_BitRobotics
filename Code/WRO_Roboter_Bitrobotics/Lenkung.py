@@ -53,6 +53,7 @@ def LenkungLinks():
     current_angle_left = adjust_angle_smoothly(current_angle_left, target_angle)
     winkel(0, current_angle_left)
 
+
 def LenkungRechts():
     global current_angle_right  # Der aktuelle Winkel für Rechtslenkung
     if distanceL <= 15:
@@ -93,7 +94,7 @@ if __name__ == '__main__':
 
                 Antrieb.Motor(2, 1, speed_set)
                 if count == 0:
-                    if distance <= 90:
+                    if distance <= 85:
                         Antrieb.motorStop()
                         time.sleep(2)
                         if distanceL < distanceR:
@@ -125,8 +126,15 @@ if __name__ == '__main__':
                     elif distance <= 90 and Richtung == "Rechts":
                         LenkungRechts()
                     else:
-                        print("Keine Richtung")
-                        LenkungGerade()
+                        if abs(distanceL - distanceR) > 5:
+                            if distanceL < distanceR:
+                                print("Roboter nicht mittig, Fahre Rechts")
+                                LenkungRechts()
+                            elif distanceR < distanceL:
+                                print("Roboter nicht mittig, Fahre Links")
+                                LenkungLinks()
+                            else:
+                                LenkungGerade()
  
                 # Geschwindigkeit basierend auf dem Frontabstand
                 if distance <= 90:
@@ -148,18 +156,6 @@ if __name__ == '__main__':
                 distance = Antrieb.checkDist()
                 distanceL = Antrieb.LinksDist()
                 KopfdrehungVoraus()                
-
-#                if distance <= 40 or distanceL < 30 or distanceR < 30:
-#                    distanceL = Antrieb.LinksDist()
-#                    distanceR = Antrieb.RechtsDist()
-#                    if distanceL < distanceR:
-#                        LenkungRechts()
-#                        time.sleep(1)
-#                    elif distanceR < distanceL:
-#                        LenkungLinks()
-#                        time.sleep(1)
-#                    else:
-#                        LenkungGerade()
 
                 Antrieb.Motor(2, 1, speed_set)
         
