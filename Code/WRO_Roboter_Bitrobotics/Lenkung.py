@@ -98,13 +98,15 @@ if __name__ == '__main__':
                             Richtung = "Rechts"
                             print(f"Rechts ist mehr Platz, Fahre {Richtung} Herum")
                             count = 1
-                            Antrieb.Motor(2, -1, 30)
+                            LenkungGerade()
+                            Antrieb.Motor(2, -1, 40)
                             time.sleep(2)
                         elif distanceR < distanceL:
                             Richtung = "Links"
                             print(f"Links ist mehr Platz, Fahre {Richtung} Herum")
                             count = 1
-                            Antrieb.Motor(2, -1, 30)
+                            LenkungGerade()
+                            Antrieb.Motor(2, -1, 40)
                             time.sleep(2)
                         else:
                             print("Keine Richtung erfasst.")
