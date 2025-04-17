@@ -42,37 +42,23 @@ def distance_to_angle_right(distance):
     winkel = 90 - ((200 - distance) / 200) * 60  # Hier anstelle 90° nur 60° maximal
     return winkel
 
-def adjust_angle_smoothly(current_angle, target_angle, step=5):
-    # Berechnet den neuen Winkel, der sich schrittweise dem Zielwinkel nähert
-    if abs(target_angle - current_angle) <= step:
-        return target_angle
-    elif target_angle > current_angle:
-        return current_angle + step
-    else:
-        return current_angle - step
-
 def LenkungLinks():
-    global current_angle_left  # Der aktuelle Winkel für Linkslenkung
-    if distanceR <= 15:
-        target_angle = 140  # Maximale Lenkung nach links
+    # Berechnung des Lenkwinkels basierend auf der Entfernung
+    if distanceR <= 20:
+        winkel(0, 140)  # Maximale Lenkung nach links
     else:
-        target_angle = distance_to_angle_left(distance)  # Berechneter Winkel basierend auf der Distanz
-    
-    # Sanfte Anpassung des Winkels
-    current_angle_left = adjust_angle_smoothly(current_angle_left, target_angle)
-    winkel(0, current_angle_left)
+        winkel_value = distance_to_angle_left(distance)  # Dynamischer Winkel basierend auf der Distanz
+        winkel(0, winkel_value)
 
 
 def LenkungRechts():
-    global current_angle_right  # Der aktuelle Winkel für Rechtslenkung
-    if distanceL <= 15:
-        target_angle = 40  # Maximale Lenkung nach rechts
+    # Berechnung des Lenkwinkels basierend auf der Entfernung
+    if distanceL <= 20:
+        winkel(0, 40)  # Maximale Lenkung nach rechts
     else:
-        target_angle = distance_to_angle_right(distance)  # Berechneter Winkel basierend auf der Distanz
-    
-    # Sanfte Anpassung des Winkels
-    current_angle_right = adjust_angle_smoothly(current_angle_right, target_angle)
-    winkel(0, current_angle_right)
+        winkel_value = distance_to_angle_right(distance)  # Dynamischer Winkel basierend auf der Distanz
+        winkel(0, winkel_value)
+
 
 
 def LenkungGerade():
