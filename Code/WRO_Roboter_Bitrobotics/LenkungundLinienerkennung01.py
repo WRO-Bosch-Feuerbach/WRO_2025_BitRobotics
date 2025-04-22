@@ -191,7 +191,7 @@ if __name__ == '__main__':
 
     # 1 Sekunden vorwärts fahren, dann anhalten
     Antrieb.Motor(2, 1, speed_set)  # Vorwärts fahren
-    time.sleep(1)  # 0.3 Sekunden fahren
+    time.sleep(1)  # 1 Sekunde fahren
     Antrieb.motorStop()  # Anhalten
 
     # Jetzt Linie erkennen und Richtung setzen
@@ -228,7 +228,7 @@ if __name__ == '__main__':
                 Antrieb.motorStop()
                 time.sleep(2)
                 LenkungGerade()
-                Antrieb.Motor(2, 1, speed_set)
+                Antrieb.Motor(2, -1, speed_set)
                 time.sleep(1)
                  
             if distanceL <= 35:
