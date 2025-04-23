@@ -226,12 +226,12 @@ if __name__ == '__main__':
     Richtung = None
     counter = 0
     distance = Antrieb.checkDist()
-
+    Antrieb.Motor(2, 1, speed_set)
     # Starte Linienerkennung und Hinderniserkennung parallel
     linien_thread = threading.Thread(target=linien_erkennung, daemon=True)
     linien_thread.start()
-    hindernis_thread =threading.Thread(target=erkenne_hindernis_farbe, daemon=True)
-    hindernis_thread.start()
+    #hindernis_thread =threading.Thread(target=erkenne_hindernis_farbe, daemon=True) # Askommentiert als Test
+    #hindernis_thread.start() # Auskommentiert als Test
 
     if counter == 0 and Richtung == None:  # Nur beim ersten Starten
     # Überwache kontinuierlich den Abstand bis die Linie erkannt wird
@@ -264,48 +264,87 @@ if __name__ == '__main__':
             if red_count > pixel_threshold:
               print("ROT erkannt")
               LenkungRechts()
-              abweichung += 1
+              #abweichung += 1
 
             elif green_count > pixel_threshold:
               print("GRÜN erkannt")
               LenkungLinks()
-              abweichung -= 1
+              #abweichung -= 1
 
             else:
-              if abweichung > 0:
-                for i in range(abweichung):
-                  LenkungLinks()
+              #if abweichung > 0:
+                #for i in range(abweichung):
+                  #LenkungLinks()
                 
-              elif abweichung < 0:
-                for i in range(abs(abweichung)):
-                  LenkungRechts()
+              #elif abweichung < 0:
+                #for i in range(abs(abweichung)):
+                  #LenkungRechts()
+
                 
-              if distance <= 20:
-                Antrieb.motorStop()
-                time.sleep(2)
-                LenkungGerade()
-                Antrieb.Motor(2, -1, speed_set)
-                time.sleep(1)
-                 
-              if distanceL <= 35:
-                LenkungRechts()
-              elif distanceR <= 35:
-                LenkungLinks()
-              else:
-                if distance <= 90 and Richtung == "Links":
-                    LenkungLinks()
-                elif distance <= 90 and Richtung == "Rechts":
-                    LenkungRechts()
+                if distance <= 20:
+                    print("Sehr nahes Hindernis! Starte Ausweichmanöver...")
+                    Antrieb.motorStop()
+                    time.sleep(0.5)
+
+                    # Rückwärts fahren (länger als vorher)
+                    LenkungGerade()
+                    Antrieb.Motor(2, -1, speed_set)  # Rückwärts fahren
+                    time.sleep(1.5)  # Längeres Rückwärtsfahren, damit genug Platz ist
+                    Antrieb.motorStop()
+
+                    # Entgegenlenken, wenn Roboter auf der Innenkurve ist
+                    if Richtung == "Rechts":
+                        if distanceR < distanceL:  # Rechtsherum: Innenkurve ist rechts
+                            print("Innenkurve erkannt. Lenke nach Links zum Ausweichen.")
+                            LenkungLinks()  # Links lenken, um in die Außenkurve zu fahren
+                            time.sleep(0.5)  # Etwas länger einlenken, um genug Platz zu gewinnen
+                        else:
+                            print("Aussenkurve erkannt. Lenke nach Rechts zum Ausweichen.")
+                            LenkungRechts()  # Rechts lenken, um in die Außenkurve zu fahren
+                            time.sleep(0.5)  # Etwas länger einlenken, um genug Platz zu gewinnen
+
+                    elif Richtung == "Links":
+                        if distanceL < distanceR:  # Linksherum: Innenkurve ist links
+                            print("Innenkurve erkannt. Lenke nach Rechts zum Ausweichen.")
+                            LenkungRechts()  # Rechts lenken, um in die Außenkurve zu fahren
+                            time.sleep(0.5)  # Etwas länger einlenken, um genug Platz zu gewinnen
+                        else:
+                            print("Aussenkurve erkannt. Lenke nach Links zum Ausweichen.")
+                            LenkungLinks()  # Links lenken, um in die Außenkurve zu fahren
+                            time.sleep(0.5)  # Etwas länger einlenken, um genug Platz zu gewinnen
+
+                    # Nach dem Ausweichen wieder ein Stück vorwärts fahren (länger als vorher)
+                    Antrieb.Motor(2, 1, speed_set)
+                    time.sleep(2)  # Länger vorwärts fahren, damit der Roboter genug Platz hat
+                    LenkungGerade()
+                    Antrieb.motorStop()
+                    time.sleep(1)  # Zusätzliche Pause, um sicherzustellen, dass der Roboter nicht wieder zu nah kommt
+
                 else:
-                    if abs(distanceL - distanceR) > 15:
-                        if distanceL < distanceR:
-                            print("Roboter nicht mittig, Fahre Rechts")
-                            LenkungRechts()
-                        elif distanceR < distanceL:
-                            print("Roboter nicht mittig, Fahre Links")
-                            LenkungLinks()
+                 
+                    if distanceL <= 35:
+                        LenkungRechts()
+                    elif distanceR <= 35:
+                        LenkungLinks()
                     else:
-                        LenkungGerade()
+                        if distance <= 90 and Richtung == "Links":
+                            LenkungLinks()
+                        elif distance <= 90 and Richtung == "Rechts":
+                            LenkungRechts()
+                        else:
+                            if abs(distanceL - distanceR) > 15:
+                                if distanceL < distanceR:
+                                    print("Roboter nicht mittig, Fahre Rechts")
+                                    LenkungRechts()
+                                elif distanceR < distanceL:
+                                    print("Roboter nicht mittig, Fahre Links")
+                                    LenkungLinks()
+                            else:
+                                LenkungGerade()
+
+                Antrieb.Motor(2, 1, speed_set)
+                KopfneigungMitte()
+                KopfdrehungVoraus()
 
     except KeyboardInterrupt:
         print("Manuell abgebrochen.")
