@@ -51,10 +51,6 @@ def erkenne_hindernis_farbe(frame):
     green_count = cv2.countNonZero(mask_gruen)
 
 
-# ---------------------------------------------
-# Linienerkennung als Hintergrund-Thread
-# ---------------------------------------------
-
 stop_robot_flag = False  # wird True, wenn 16 Linien erkannt wurden
 
 def color_detection(frame, color_to_detect):
@@ -235,6 +231,10 @@ if __name__ == '__main__':
     distanceL = Antrieb.LinksDist()
     distanceR = Antrieb.RechtsDist()
     distance = Antrieb.checkDist()
+
+    # ---------------------------------------------
+    # Linienerkennung als Hintergrund-Thread
+    # ---------------------------------------------
 
     linien_thread = threading.Thread(target=linien_erkennung, daemon=True)
     linien_thread.start()
