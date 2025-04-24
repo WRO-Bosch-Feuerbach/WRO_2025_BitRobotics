@@ -25,7 +25,7 @@ rot_max2 = np.array([180, 255, 255])
 gruen_min = np.array([50, 100, 100])
 gruen_max = np.array([80, 255, 255])
 
-pixel_threshold = 50
+pixel_threshold = 15
 
 abweichung = 0
 last_hindernis_time = time.time()  # Initialisierung der last_hindernis_time
@@ -36,7 +36,7 @@ def erkenne_hindernis_farbe(frame):
     global abweichung, last_hindernis_time, red_count, green_count
 
     current_time = time.time()
-    if current_time - last_hindernis_time < 0.5:  # Verhindert schnelle Richtungswechsel
+    if current_time - last_hindernis_time < 0.2:  # Verhindert schnelle Richtungswechsel
         return
 
     last_hindernis_time = current_time
@@ -225,7 +225,7 @@ def KopfneigungMitte():
 # ---------------------------------------------
 if __name__ == '__main__':
     KopfneigungMitte()
-    speed_set = 35
+    speed_set = 30
     Richtung = None
     counter = 0
     distance = Antrieb.checkDist()
@@ -243,14 +243,18 @@ if __name__ == '__main__':
 
     if red_count > pixel_threshold:
         print("ROT erkannt")
+        speed_set = 20
+        Antrieb.Motor(2, 1, speed_set)
         LenkungRechts()
-        if distanceR < 5:
+        if distanceR < 10:
             LenkungLinks()
 
     elif green_count > pixel_threshold:
         print("GRÜN erkannt")
+        speed_set = 20
+        Antrieb.Motor(2, 1, speed_set)
         LenkungLinks()
-        if distanceL < 5:
+        if distanceL < 10:
             LenkungRechts()
 
     else:
@@ -260,7 +264,7 @@ if __name__ == '__main__':
             while True:
                 distance = Antrieb.checkDist()  # Abstand messen
 
-                if distance <= 95:  # Zielabstand (näher an der Linie)
+                if distance <= 98:  # Zielabstand (näher an der Linie)
                     Antrieb.motorStop()  # Roboter stoppen
                     print("Anhaltepunkt erreicht, Roboter stoppt.")
                     counter = 1  # Sicherstellen, dass der Code nur einmal ausgeführt wird
