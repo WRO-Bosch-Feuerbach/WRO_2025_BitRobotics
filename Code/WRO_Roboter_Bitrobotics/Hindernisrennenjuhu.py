@@ -25,10 +25,12 @@ rot_max2 = np.array([180, 255, 255])
 gruen_min = np.array([50, 100, 100])
 gruen_max = np.array([80, 255, 255])
 
-pixel_threshold = 100
+pixel_threshold = 50
 
 abweichung = 0
 last_hindernis_time = time.time()  # Initialisierung der last_hindernis_time
+red_count = 0
+green_count = 0
 
 def erkenne_hindernis_farbe(frame):
     global abweichung, last_hindernis_time, red_count, green_count
@@ -222,34 +224,54 @@ def KopfneigungMitte():
 # Hauptprogrammstart
 # ---------------------------------------------
 if __name__ == '__main__':
+    KopfneigungMitte()
     speed_set = 35
     Richtung = None
     counter = 0
     distance = Antrieb.checkDist()
     Antrieb.Motor(2, 1, speed_set)
     # Starte Linienerkennung und Hinderniserkennung parallel
+
+    distanceL = Antrieb.LinksDist()
+    distanceR = Antrieb.RechtsDist()
+    distance = Antrieb.checkDist()
+
     linien_thread = threading.Thread(target=linien_erkennung, daemon=True)
     linien_thread.start()
-    #hindernis_thread =threading.Thread(target=erkenne_hindernis_farbe, daemon=True) # Askommentiert als Test
-    #hindernis_thread.start() # Auskommentiert als Test
+    hindernis_thread = threading.Thread(target=erkenne_hindernis_farbe, daemon=True)
+    hindernis_thread.start()
 
-    if counter == 0 and Richtung == None:  # Nur beim ersten Starten
-    # Überwache kontinuierlich den Abstand bis die Linie erkannt wird
-        while True:
-            distance = Antrieb.checkDist()  # Abstand messen
+    if red_count > pixel_threshold:
+        print("ROT erkannt")
+        LenkungRechts()
+        if distanceR < 5:
+            LenkungLinks()
 
-            if distance <= 95:  # Zielabstand (näher an der Linie)
-                Antrieb.motorStop()  # Roboter stoppen
-                print("Anhaltepunkt erreicht, Roboter stoppt.")
-                counter = 1  # Sicherstellen, dass der Code nur einmal ausgeführt wird
-                break  # Beende die Schleife und gehe zur nächsten Phase der Linienerkennung
-            else:
-                # Weiterfahren, bis der Zielabstand erreicht ist
-                Antrieb.Motor(2, 1, speed_set)  # Vorwärts fahren
+    elif green_count > pixel_threshold:
+        print("GRÜN erkannt")
+        LenkungLinks()
+        if distanceL < 5:
+            LenkungRechts()
 
-    # Jetzt Linie erkennen und Richtung setzen
-    while Richtung is None and not stop_robot_flag:
-        time.sleep(0.1)  # Kurze Pause, um sicherzustellen, dass Linien erkannt werden können.
+    else:
+
+        if counter == 0 and Richtung == None:  # Nur beim ersten Starten
+        # Überwache kontinuierlich den Abstand bis die Linie erkannt wird
+            while True:
+                distance = Antrieb.checkDist()  # Abstand messen
+
+                if distance <= 95:  # Zielabstand (näher an der Linie)
+                    Antrieb.motorStop()  # Roboter stoppen
+                    print("Anhaltepunkt erreicht, Roboter stoppt.")
+                    counter = 1  # Sicherstellen, dass der Code nur einmal ausgeführt wird
+                    break  # Beende die Schleife und gehe zur nächsten Phase der Linienerkennung
+                else:
+                    # Weiterfahren, bis der Zielabstand erreicht ist
+                    Antrieb.Motor(2, 1, speed_set)  # Vorwärts fahren
+
+        # Jetzt Linie erkennen und Richtung setzen
+        while Richtung is None and not stop_robot_flag:
+            time.sleep(0.1)  # Kurze Pause, um sicherzustellen, dass Linien erkannt werden können.
 
     try:
         while not stop_robot_flag:
@@ -261,90 +283,82 @@ if __name__ == '__main__':
                 print("Sensorfehler erkannt – überspringe Zyklus")
                 continue
 
+            # ======= 1. Farb-Hinderniserkennung (höchste Priorität) =======
             if red_count > pixel_threshold:
-              print("ROT erkannt")
-              LenkungRechts()
-              #abweichung += 1
+                print("ROT erkannt → Hindernis rechts")
+                LenkungRechts()
+                if distanceR < 5:
+                    LenkungLinks()
 
             elif green_count > pixel_threshold:
-              print("GRÜN erkannt")
-              LenkungLinks()
-              #abweichung -= 1
+                print("GRÜN erkannt → Hindernis links")
+                LenkungLinks()
+                if distanceL < 5:
+                    LenkungRechts()
 
-            else:
-              #if abweichung > 0:
-                #for i in range(abweichung):
-                  #LenkungLinks()
-                
-              #elif abweichung < 0:
-                #for i in range(abs(abweichung)):
-                  #LenkungRechts()
+            # ======= 2. Kein Farb-Hindernis → klassische Abstandskontrolle =======
+            elif distance <= 20:
+                print("Sehr nahes Hindernis! Starte Ausweichmanöver...")
+                Antrieb.motorStop()
+                time.sleep(0.5)
 
-                
-                if distance <= 20:
-                    print("Sehr nahes Hindernis! Starte Ausweichmanöver...")
-                    Antrieb.motorStop()
-                    time.sleep(0.5)
+                # Rückwärts & Entgegenlenken
+                LenkungGerade()
+                Antrieb.Motor(2, -1, speed_set)
+                time.sleep(1.5)
+                Antrieb.motorStop()
 
-                    # Rückwärts fahren (länger als vorher)
-                    LenkungGerade()
-                    Antrieb.Motor(2, -1, speed_set)  # Rückwärts fahren
-                    time.sleep(1.5)  # Längeres Rückwärtsfahren, damit genug Platz ist
-                    Antrieb.motorStop()
-
-                    # Entgegenlenken, wenn Roboter auf der Innenkurve ist
-                    if Richtung == "Rechts":
-                        if distanceR < distanceL:  # Rechtsherum: Innenkurve ist rechts
-                            print("Innenkurve erkannt. Lenke nach Links zum Ausweichen.")
-                            LenkungLinks()  # Links lenken, um in die Außenkurve zu fahren
-                            time.sleep(0.5)  # Etwas länger einlenken, um genug Platz zu gewinnen
-                        else:
-                            print("Aussenkurve erkannt. Lenke nach Rechts zum Ausweichen.")
-                            LenkungRechts()  # Rechts lenken, um in die Außenkurve zu fahren
-                            time.sleep(0.5)  # Etwas länger einlenken, um genug Platz zu gewinnen
-
-                    elif Richtung == "Links":
-                        if distanceL < distanceR:  # Linksherum: Innenkurve ist links
-                            print("Innenkurve erkannt. Lenke nach Rechts zum Ausweichen.")
-                            LenkungRechts()  # Rechts lenken, um in die Außenkurve zu fahren
-                            time.sleep(0.5)  # Etwas länger einlenken, um genug Platz zu gewinnen
-                        else:
-                            print("Aussenkurve erkannt. Lenke nach Links zum Ausweichen.")
-                            LenkungLinks()  # Links lenken, um in die Außenkurve zu fahren
-                            time.sleep(0.5)  # Etwas länger einlenken, um genug Platz zu gewinnen
-
-                    # Nach dem Ausweichen wieder ein Stück vorwärts fahren (länger als vorher)
-                    Antrieb.Motor(2, 1, speed_set)
-                    time.sleep(2)  # Länger vorwärts fahren, damit der Roboter genug Platz hat
-                    LenkungGerade()
-                    Antrieb.motorStop()
-                    time.sleep(1)  # Zusätzliche Pause, um sicherzustellen, dass der Roboter nicht wieder zu nah kommt
-
-                else:
-                 
-                    if distanceL <= 35:
-                        LenkungRechts()
-                    elif distanceR <= 35:
+                if Richtung == "Rechts":
+                    if distanceR < distanceL:
+                        print("Innenkurve erkannt. Lenke nach Links zum Ausweichen.")
                         LenkungLinks()
                     else:
-                        if distance <= 90 and Richtung == "Links":
-                            LenkungLinks()
-                        elif distance <= 90 and Richtung == "Rechts":
-                            LenkungRechts()
-                        else:
-                            if abs(distanceL - distanceR) > 15:
-                                if distanceL < distanceR:
-                                    print("Roboter nicht mittig, Fahre Rechts")
-                                    LenkungRechts()
-                                elif distanceR < distanceL:
-                                    print("Roboter nicht mittig, Fahre Links")
-                                    LenkungLinks()
-                            else:
-                                LenkungGerade()
+                        print("Außenkurve erkannt. Lenke nach Rechts zum Ausweichen.")
+                        LenkungRechts()
+
+                elif Richtung == "Links":
+                    if distanceL < distanceR:
+                        print("Innenkurve erkannt. Lenke nach Rechts zum Ausweichen.")
+                        LenkungRechts()
+                    else:
+                        print("Außenkurve erkannt. Lenke nach Links zum Ausweichen.")
+                        LenkungLinks()
 
                 Antrieb.Motor(2, 1, speed_set)
-                KopfneigungMitte()
-                KopfdrehungVoraus()
+                time.sleep(2)
+                LenkungGerade()
+                Antrieb.motorStop()
+                time.sleep(1)
+
+            # ======= 3. Normales Navigieren über Distanzsensoren =======
+            else:
+                if distanceL <= 35:
+                    LenkungRechts()
+                elif distanceR <= 35:
+                    LenkungLinks()
+                else:
+                    if distance <= 90:
+                        if Richtung == "Links":
+                            LenkungLinks()
+                        elif Richtung == "Rechts":
+                            LenkungRechts()
+                        else:
+                            LenkungGerade()
+                    else:
+                        if abs(distanceL - distanceR) > 5:
+                            if distanceL < distanceR:
+                                print("Roboter nicht mittig, fahre Rechts")
+                                LenkungRechts()
+                            elif distanceR < distanceL:
+                                print("Roboter nicht mittig, fahre Links")
+                                LenkungLinks()
+                        else:
+                            LenkungGerade()
+
+            # ======= 4. Bewegung & Kopfhaltung =======
+            Antrieb.Motor(2, 1, speed_set)
+            KopfneigungMitte()
+            KopfdrehungVoraus()
 
     except KeyboardInterrupt:
         print("Manuell abgebrochen.")
