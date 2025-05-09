@@ -28,7 +28,7 @@ rot_max2 = np.array([180, 255, 255])
 gruen_min = np.array([50, 100, 100])
 gruen_max = np.array([80, 255, 255])
 aktuelle_aktion = "Nichts"
-pixel_threshold = 100
+pixel_threshold = 150
 
 abweichung = 0
 last_hindernis_time = time.time()  # Initialisierung der last_hindernis_time
@@ -38,13 +38,13 @@ counting = 0 # Variable gegen wiederholtes Rückwärtsfahren nach farberkennung,
 
 
 camera = PiCamera()
-camera.resolution = (640, 360)
+camera.resolution = (640, 640)
 camera.framerate = 30
-rawCapture = PiRGBArray(camera, size=(640, 360))
+rawCapture = PiRGBArray(camera, size=(640, 640))
 print("Kamera Fährt hoch...")
 time.sleep(5)
 
-def zeige_status(distance, distanceL, distanceR, red_count, green_count, aktion, line_counter, MAX_LINES, Richtung):
+def zeige_status(distance, distanceL, distanceR, red_count, green_count, aktion, line_counter, MAX_LINES, Richtung, letzte_farbe, letzte_aktion):
     status_lines = [
         "=== ROBOT STATUS ===",
         f"Distanz Vorne:  {distance:>5} cm",
@@ -53,7 +53,9 @@ def zeige_status(distance, distanceL, distanceR, red_count, green_count, aktion,
         f"Rote Pixel:     {red_count:>5}",
         f"Grüne Pixel:    {green_count:>5}",
         f"Aktuelle Aktion: {aktion}",
+        f"Letzte Aktion: {letzte_aktion}",
         f"Anzahl Linien: {line_counter}/{MAX_LINES}",
+        f"Letzte Farbe: {letzte_farbe}",
         f"Richtung: {Richtung}",
         "===================="
     ]
@@ -196,6 +198,10 @@ def linien_erkennung():
     camera.close()
     print("Linienerkennung beendet.")
 
+    def is_curuve_ahead(distanceL, distanceR):
+        #Frühe Kurvenerkennung
+        return abs(distanceL - distanceR) > 10
+
 # ---------------------------------------------
 # Originales Steuerungsskript (leicht angepasst)
 # ---------------------------------------------
@@ -238,15 +244,25 @@ def distance_to_angle_right(distance):
         return 90
     return 90 - ((200 - min(200, distance)) / 200) * 40
 
+last_turn_direction = None
+
 def LenkungLinks():
+    global last_turn_direction
+    aktuelle_aktion = "Lenke Links"
+
     distanceR = Antrieb.RechtsDist()
     distance = Antrieb.checkDist()
     winkel(0, distance_to_angle_left(distanceR if distanceR <= 35 else distance))
+    last_turn_direction = "links"
 
 def LenkungRechts():
+    global last_turn_direction
+    aktuelle_aktion = "Lenke Rechts"
+
     distanceL = Antrieb.LinksDist()
     distance = Antrieb.checkDist()
     winkel(0, distance_to_angle_right(distanceL if distanceL <= 35 else distance))
+    last_turn_direction = "rechts"
 
 def LenkungGerade():
     winkel(0, 90)
@@ -255,7 +271,7 @@ def KopfdrehungVoraus():
     Kopfwinkel(1, 90)
 
 def KopfneigungMitte():
-    winkel(2, 50)
+    winkel(2, 35)
 
 KopfneigungMitte()
 
@@ -263,26 +279,12 @@ KopfneigungMitte()
 # Funktionen für die Kurven- und Mittigkeitslogik
 # ---------------------------------------------
 
-def check_midline():
-    distanceL = Antrieb.LinksDist()
-    distanceR = Antrieb.RechtsDist()
-    if abs(distanceL - distanceR) <= 10:
-        print("Roboter ist mittig!")
-        return True
-    else:
-        print("Roboter ist nicht mittig!")
-        return False
 
 def is_in_turn():
     distanceL = Antrieb.LinksDist()
     distanceR = Antrieb.RechtsDist()
     return abs(distanceL - distanceR) > 10
-
-def lenke_und_weiterfahren():
-    if is_in_turn():
-        print("Kurve erkannt – Mittigkeitsprüfung übersprungen.")
-        return False
-    return check_midline()
+    
 
 # ---------------------------------------------
 # Hauptprogrammstart
@@ -301,17 +303,21 @@ if __name__ == '__main__':
     counter = 0
     distance = Antrieb.checkDist()
 
-    camera.capture(rawCapture, format="bgr")
-    frame = rawCapture.array
+    while Richtung == None:
+        camera.capture(rawCapture, format="bgr")
+        frame = rawCapture.array
     
-    erkenne_hindernis_farbe(frame)
+        erkenne_hindernis_farbe(frame)
 
-    print(f"Initial ROT: {red_count}")
-    print(f"Initial GRÜN: {green_count}")
+        print(f"Initial ROT: {red_count}")
+        print(f"Initial GRÜN: {green_count}")
 
-    rawCapture.truncate(0)
+        Antrieb.Motor(2, 1, speed_set)
 
-    Antrieb.Motor(2, 1, speed_set)
+        rawCapture.truncate(0)
+        distanceL = Antrieb.LinksDist()
+        distanceR = Antrieb.RechtsDist()
+        distance = Antrieb.checkDist()
 
     distanceL = Antrieb.LinksDist()
     distanceR = Antrieb.RechtsDist()
@@ -319,14 +325,24 @@ if __name__ == '__main__':
 
 
 
-    if red_count > pixel_threshold :
+    if red_count > pixel_threshold:
         print("ROT erkannt")
         speed_set = 20
         Antrieb.Motor(2, 1, speed_set)
         LenkungRechts()
         letzte_farbe = "ROT"
-        if distanceR < 5:
-            LenkungLinks()
+        if letzte_farbe == "ROT":
+            aktuelle_aktion = ("Erkenne Rot, Lenke Rechts")
+            if red_count > pixel_threshold:
+                LenkungRechts()
+                time.sleep(0.3)
+                LenkungGerade()
+            elif distanceL < 20:
+                aktuelle_aktion = "Letzte Farbe Rot, Links Hindernis, !!Muss Rechts!!"
+                LenkungRechts()
+            else:
+                aktuelle_aktion = ("Letzte Farbe Rot, alles gut!")
+                LenkungGerade()
 
     elif green_count > pixel_threshold:
         print("GRÜN erkannt")
@@ -334,24 +350,29 @@ if __name__ == '__main__':
         Antrieb.Motor(2, 1, speed_set)
         LenkungLinks()
         letzte_farbe = "GRUEN"
-        if distanceL < 5:
-            LenkungRechts()
+        if letzte_farbe == "GRUEN":
+            aktuelle_aktion = ("Erkenne Grün, Lenke Links")
+            if green_count > pixel_threshold:
+                LenkungLinks()                        
+            elif distanceR < 20:
+                aktuelle_aktion = "Letzte Farbe Grün, Rechts Hindernis, !!Muss Links!!"
+                LenkungLinks()
+            else:
+                aktuelle_aktion = ("Letzte Farbe Rot, alles gut!")
+                LenkungGerade()
 
     else:
         if counter == 0 and Richtung is None:
             speed_set = 30
             while True:
                 distance = Antrieb.checkDist()
-                if distance <= 60:
+                if distance <= 50:
                     Antrieb.motorStop()
                     aktuelle_aktion = ("Anhaltepunkt erreicht, Roboter stoppt.")
                     counter = 1
                     break
                 else:
                     Antrieb.Motor(2, 1, speed_set)
-
-        while Richtung is None and not stop_robot_flag:
-            time.sleep(0.1)
 
     try:
         letzte_farbe = None
@@ -368,7 +389,7 @@ if __name__ == '__main__':
             if red_count > pixel_threshold:
                 # Rückwärts fahren, für bessere umsicht
                 aktuelle_aktion = ("ROT erkannt → Hindernis rechts")   
-                if red_count > pixel_threshold and counting == 0:
+                if red_count > 8000 and counting == 0:
                     Antrieb.motorStop()
                     time.sleep(0.5)
 
@@ -383,15 +404,23 @@ if __name__ == '__main__':
                 speed_set = 20
                 Antrieb.Motor(2, 1, speed_set)
                 letzte_farbe = "ROT"
-                if distanceR < 5:
-                    LenkungLinks()
-                    #time.sleep(0.3)
-                    #LenkungGerade()
-                    #time.sleep(0.3)
+
+                if letzte_farbe == "ROT":
+                    aktuelle_aktion = ("Erkenne Rot, Lenke Rechts")
+                    if red_count > pixel_threshold:
+                        LenkungRechts()
+                        time.sleep(0.3)
+                        LenkungGerade()
+                    elif distanceL < 20:
+                        aktuelle_aktion = "Letzte Farbe Rot, Links Hindernis, !!Muss Rechts!!"
+                        LenkungRechts()
+                    else:
+                        aktuelle_aktion = ("Letzte Farbe Rot, alles gut!")
+                        LenkungGerade()
 
             elif green_count > pixel_threshold:
                 aktuelle_aktion =("GRÜN erkannt → Hindernis links")
-                if green_count > pixel_threshold and counting == 0:
+                if green_count > 6000 and counting == 0:
                     Antrieb.motorStop()
                     time.sleep(0.5)
 
@@ -406,33 +435,32 @@ if __name__ == '__main__':
                 speed_set = 20
                 Antrieb.Motor(2, 1, speed_set)
                 letzte_farbe = "GRUEN"
-                if distanceL < 5:
-                    LenkungRechts()
-                    #time.sleep(0.3)
-                    #LenkungGerade()
-                    #time.sleep(0.3)
+
+                if letzte_farbe == "GRUEN":
+                    aktuelle_aktion = ("Erkenne Grün, Lenke Links")
+                    if green_count > pixel_threshold:
+                        LenkungLinks()                        
+                    elif distanceR < 20:
+                        aktuelle_aktion = "Letzte Farbe Grün, Rechts Hindernis, !!Muss Links!!"
+                        LenkungLinks()
+                    else:
+                        aktuelle_aktion = ("Letzte Farbe Rot, alles gut!")
+                        LenkungGerade()
 
             # ======= 2. Klassische Abstandskontrolle =======
-            elif distance <= 20:
+            if distance <= 25 and red_count < pixel_threshold and green_count < pixel_threshold:
                 aktuelle_aktion = ("‼️ Sehr nahes Hindernis! Starte Ausweichmanöver...")
                 Antrieb.motorStop()
                 time.sleep(0.5)
-
                 LenkungGerade()
                 Antrieb.Motor(2, -1, speed_set)
                 time.sleep(1.5)
                 Antrieb.motorStop()
 
-                if Richtung == "Rechts":
-                    if distanceR < distanceL:
-                        LenkungLinks()
-                    else:
-                        LenkungRechts()
-                elif Richtung == "Links":
-                    if distanceL < distanceR:
-                        LenkungRechts()
-                    else:
-                        LenkungLinks()
+                if last_turn_direction == "rechts":
+                    LenkungLinks()
+                elif last_turn_direction == "links":
+                    LenkungRechts()
 
                 Antrieb.Motor(2, 1, speed_set)
                 time.sleep(2)
@@ -443,65 +471,68 @@ if __name__ == '__main__':
             # ======= 3. Normales Fahren inkl. Kurven-/Mittigkeitslogik =======
             else:
 
-                if (red_count < pixel_threshold) and (green_count < pixel_threshold) and counting != 0:
+                if (red_count < pixel_threshold) and (green_count < pixel_threshold) and counting == 1:
                     letzte_farbe = None
                     counting = 0
 
                 if letzte_farbe == "ROT":
-                    aktuelle_aktion = ("Orientiere mich Rechts")
-                    if distanceR < 10:
-                        if distanceL > 75:
-                            LenkungLinks()
-                        else:
-                            aktuelle_aktion = ("Bin Rechts")
-                            LenkungRechts()
+                    aktuelle_aktion = ("Erkenne Rot, Lenke Rechts")
+                    if red_count > pixel_threshold:
+                        LenkungRechts()
+                        time.sleep(0.3)
+                        LenkungGerade()
+                    elif distanceL < 20:
+                        aktuelle_aktion = "Letzte Farbe Rot, Links Hindernis, !!Muss Rechts!!"
+                        LenkungRechts()
+                    else:
+                        aktuelle_aktion = ("Letzte Farbe Rot, alles gut!")
+                        LenkungGerade()
 
                 elif letzte_farbe == "GRUEN":
-                    aktuelle_aktion = ("Orientiere mich Links")
-                    if distanceL < 10:
-                        if distanceR > 75: 
-                            LenkungRechts()
-                        else:
-                            aktuelle_aktion = ("Bin Links")
-                            LenkungLinks()
+                    aktuelle_aktion = ("Erkenne Grün, Lenke Links")
+                    if green_count > pixel_threshold:
+                        LenkungLinks()                        
+                    elif distanceR < 20:
+                        aktuelle_aktion = "Letzte Farbe Grün, Rechts Hindernis, !!Muss Links!!"
+                        LenkungLinks()
+                    else:
+                        aktuelle_aktion = ("Letzte Farbe Rot, alles gut!")
+                        LenkungGerade()
 
 
                 else:
                     
-                    if distanceL <= 25 and not letzte_farbe == "GRUEN":
+                    if distanceL <= 30 and not letzte_farbe == "GRUEN":
                         aktuelle_aktion = (" Zu nah links – korrigiere nach rechts")
                         LenkungRechts()
-                        #time.sleep(0.3)
-                        #LenkungGerade()
 
-                    elif distanceR <= 25 and not letzte_farbe == "ROT":
+                    elif distanceR <= 30 and not letzte_farbe == "ROT":
                         aktuelle_aktion = (" Zu nah rechts – korrigiere nach links")
                         LenkungLinks()
-                        #time.sleep(0.3)
-                        #LenkungGerade()
 
                     else:
-                        if distance <= 88:
+                        if distance <= 90:
                             if Richtung == "Links":
                                 LenkungLinks()
                             elif Richtung == "Rechts":
                                 LenkungRechts()
-                        else:
-                            if not lenke_und_weiterfahren():
-                                aktuelle_aktion = ("Mittigkeitskorrektur läuft...")
-                                # Korrekturhandling kann hier ergänzt werden, falls nötig
                             else:
                                 LenkungGerade()
-
+                        else:
+                            LenkungGerade()
+                                
             # ======= 4. Bewegung & Kopfhaltung =======
-            letzte_farbe = None
+            if letzte_farbe != None and green_count < 50 and red_count < 50:
+                letzte_farbe = None
             Antrieb.Motor(2, 1, speed_set)
             KopfneigungMitte()
             KopfdrehungVoraus()
             if red_count < pixel_threshold and green_count < pixel_threshold:
                 speed_set = 30
 
-            zeige_status(distance, distanceL, distanceR, red_count, green_count, aktuelle_aktion, line_counter, MAX_LINES, Richtung)
+            letzte_aktion = aktuelle_aktion
+
+            zeige_status(distance, distanceL, distanceR, red_count, green_count, aktuelle_aktion, line_counter, MAX_LINES, Richtung, letzte_farbe, letzte_aktion)
             #time.sleep(0.1)
             
     except KeyboardInterrupt:
@@ -513,5 +544,5 @@ if __name__ == '__main__':
         KopfneigungMitte()
         LenkungGerade()
         pca.deinit()
-        PiCamera.close()
+        camera.close()
         GPIO.cleanup()
