@@ -451,7 +451,7 @@ if __name__ == '__main__':
 
             # ======= 2. Klassische Abstandskontrolle =======
             if distance <= 25 and red_count < pixel_threshold and green_count < pixel_threshold:
-                aktuelle_aktion = ("‼️ Sehr nahes Hindernis! Starte Ausweichmanöver...")
+                aktuelle_aktion = ("Sehr nahes Hindernis! Starte Ausweichmanöver...")
                 Antrieb.motorStop()
                 time.sleep(0.5)
                 LenkungGerade()
