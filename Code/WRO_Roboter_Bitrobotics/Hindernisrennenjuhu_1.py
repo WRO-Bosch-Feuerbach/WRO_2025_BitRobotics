@@ -312,7 +312,15 @@ if __name__ == '__main__':
         print(f"Initial ROT: {red_count}")
         print(f"Initial GRÜN: {green_count}")
 
+        speed_set = 15
         Antrieb.Motor(2, 1, speed_set)
+
+        if red_count > pixel_threshold:
+            LenkungRechts()
+        elif green_count > pixel_threshold:
+            LenkungLinks()
+        else:
+            LenkungGerade()
 
         rawCapture.truncate(0)
         distanceL = Antrieb.LinksDist()
